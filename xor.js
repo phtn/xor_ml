@@ -44,7 +44,7 @@ function setup(){
   model = tf.sequential()
   // define hidden layer
   const hidden = tf.layers.dense({
-    units: 2,
+    units: 4,
     inputShape: [2],
     activation: 'sigmoid'
   })
@@ -57,17 +57,25 @@ function setup(){
   model.add(hidden) // hidden layer 2 nodes
   model.add(outputs) // output layer 1 node
   // declare optimizer
-  const optimizer = tf.train.sgd(0.3)
+  const optimizer = tf.train.adam(0.1)
   // compile model
   model.compile({
     optimizer,
     loss: 'meanSquaredError'    
   })
+  setTimeout(train, 100)
 }
-// train model
+
+function train(){
+  trainModel()
+    .then(response => console.log(response.history.loss[0]))
+    setTimeout(train, 100)
+}
+// train model function
 async function trainModel(){
   return await model.fit(train_xs, train_ys, {
-    shuffle: true
+    shuffle: true,
+    epochs: 20
   })
 }
 
@@ -78,12 +86,12 @@ let cols, rows
 // p5 draw function
 function draw(){
   
-  trainModel().then(response => console.log(response.history.loss[0]))
+  
 
   stroke(254)
   
   // create predictions
-  ys = model.predict(xs).dataSync()
+  y_values = model.predict(xs).dataSync()
   
 
   // draw data
@@ -91,8 +99,13 @@ function draw(){
   for (let i = 0; i < cols; i++){
     for (let j = 0; j < rows; j++){
       
-      fill(ys[index] * 255)
+      let bgColor = y_values[index] * 255
+      fill(bgColor)
       rect(i * resolution, j * resolution, resolution, resolution)
+      fill(205 - bgColor)
+      textAlign(CENTER, CENTER)
+      textSize(8)
+      text(nf(y_values[index],1, 1), i * resolution + resolution / 2, j * resolution + resolution / 2)
       index++
     }
   }
